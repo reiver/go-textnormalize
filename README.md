@@ -13,7 +13,7 @@ For normalizing *line separators*, this means making all the following conversio
 
 '\u2028' is the UNICODE *line separator* character.
 '\u2029' is the UNICODE *paragraph separator* character.
-They have similar functionality to the HTML <br> and <p> elements, respectively.
+They have similar functionality to the HTML <*br*> and <*p*> elements, respectively.
  
 
 Usage
