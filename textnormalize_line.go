@@ -87,6 +87,7 @@ func NormalizeLineSeparators(s []rune) []rune {
 // "\n"     → "\u2028",
 // "\u0085" → "\u2028".
 type LineLex struct {
+	canonicalLineSeparator rune
 	previousRuneWasCarriageReturn bool
 	outputChannel chan<- rune
 }
@@ -103,6 +104,7 @@ type LineLex struct {
 func NewLineLex(c chan<- rune) (*LineLex) {
 
 	me := LineLex{
+		canonicalLineSeparator        : '\u2028',
 		previousRuneWasCarriageReturn : false,
 		outputChannel                 : c,
 	}
@@ -112,7 +114,7 @@ func NewLineLex(c chan<- rune) (*LineLex) {
 
 
 
-func escape(r rune) rune {
+func (me *LineLex) escape(r rune) rune {
 	result := r
 
 
@@ -122,7 +124,7 @@ func escape(r rune) rune {
 			'\r',
 			'\n',
 			'\u0085':
-			result = '\u2028'
+			result = me.canonicalLineSeparator
 	}
 
 
@@ -146,20 +148,20 @@ func (me *LineLex) WriteRune(r rune) {
 			// Nothing here.
 
 		case !previousRuneWasCarriageReturn && '\r' != r:
-			me.outputChannel <- escape(r)
+			me.outputChannel <- me.escape(r)
 
 		case previousRuneWasCarriageReturn && '\r' == r:
-			me.outputChannel <- '\u2028'
+			me.outputChannel <- me.canonicalLineSeparator
 
 		case previousRuneWasCarriageReturn && '\r' != r && '\n' == r:
-			me.outputChannel <- '\u2028'
+			me.outputChannel <- me.canonicalLineSeparator
 
 		case previousRuneWasCarriageReturn && '\r' != r && '\n' != r:
-			me.outputChannel <- '\u2028'
-			me.outputChannel <- escape(r)
+			me.outputChannel <- me.canonicalLineSeparator
+			me.outputChannel <- me.escape(r)
 
 		default:
-			me.outputChannel <- escape(r)
+			me.outputChannel <- me.escape(r)
 	}
 
 }
@@ -168,7 +170,7 @@ func (me *LineLex) WriteRune(r rune) {
 func (me *LineLex) WriteEof() {
 
 	if me.previousRuneWasCarriageReturn {
-		me.outputChannel <- '\u2028'
+		me.outputChannel <- me.canonicalLineSeparator
 	}
 
 	me.previousRuneWasCarriageReturn = false
