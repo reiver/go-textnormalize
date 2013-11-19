@@ -114,7 +114,7 @@ func NewLineLex(c chan<- rune) (*LineLex) {
 
 
 
-func (me *LineLex) escape(r rune) rune {
+func (me *LineLex) canonicalize(r rune) rune {
 	result := r
 
 
@@ -148,7 +148,7 @@ func (me *LineLex) WriteRune(r rune) {
 			// Nothing here.
 
 		case !previousRuneWasCarriageReturn && '\r' != r:
-			me.outputChannel <- me.escape(r)
+			me.outputChannel <- me.canonicalize(r)
 
 		case previousRuneWasCarriageReturn && '\r' == r:
 			me.outputChannel <- me.canonicalLineSeparator
@@ -158,10 +158,10 @@ func (me *LineLex) WriteRune(r rune) {
 
 		case previousRuneWasCarriageReturn && '\r' != r && '\n' != r:
 			me.outputChannel <- me.canonicalLineSeparator
-			me.outputChannel <- me.escape(r)
+			me.outputChannel <- me.canonicalize(r)
 
 		default:
-			me.outputChannel <- me.escape(r)
+			me.outputChannel <- me.canonicalize(r)
 	}
 
 }
